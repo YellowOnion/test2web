@@ -6,6 +6,7 @@ import Control.Monad
 import System.Directory
 import System.FilePath
 import System.IO
+import System.Environment (getArgs)
 import Data.Char (isDigit)
 import Data.List (isSubsequenceOf, stripPrefix)
 import Data.Maybe
@@ -72,8 +73,10 @@ testsToHtml rev tests = H.docTypeHtml $ do
 
 main :: IO ()
 main = do
+  rev:directory:args <- getArgs
   fs <- listDirectory directory
   tests <- forM ( filter (notElem '.') fs) $ \fileName -> do
+    hPutStrLn stderr fileName
     fc <- readFile $ directory </> fileName
     return (fileName, catMaybes . parseTests . lines $ fc)
-  writeFile "output.html". renderHtml . testsToHtml "0x00000" $ tests
+  writeFile "output.html". renderHtml . testsToHtml rev $ tests
