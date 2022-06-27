@@ -73,10 +73,14 @@ testsToHtml rev tests = H.docTypeHtml $ do
 
 main :: IO ()
 main = do
-  rev:directory:args <- getArgs
-  fs <- listDirectory directory
-  tests <- forM ( filter (notElem '.') fs) $ \fileName -> do
-    hPutStrLn stderr fileName
-    fc <- readFile $ directory </> fileName
-    return (fileName, catMaybes . parseTests . lines $ fc)
-  writeFile "output.html". renderHtml . testsToHtml rev $ tests
+  args <- getArgs
+  if length args < 2 then
+    hPutStrLn stderr "help: <git-rev> <test directory>"
+    else do
+      let rev:directory:_ = args
+      fs <- listDirectory directory
+      tests <- forM ( filter (notElem '.') fs) $ \fileName -> do
+        hPutStrLn stderr fileName
+        fc <- readFile $ directory </> fileName
+        return (fileName, catMaybes . parseTests . lines $ fc)
+      writeFile "output.html". renderHtml . testsToHtml rev $ tests
