@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Main where
 
@@ -22,6 +23,7 @@ import qualified Debug.Trace as Trace
 import Data.HashMap.Strict (foldMapWithKey)
 import GHC.Base (Semigroup)
 
+import Control.Lens
 
 trace' a = Trace.trace (show a) a
 
@@ -29,10 +31,12 @@ data TestResult = Pass | Fail
   deriving (Show)
 
 data Test = Test
-  { testName :: String,
-    testResult :: Maybe TestResult,
-    testTime :: Maybe Int
+  { _name :: String,
+    _result :: Maybe TestResult,
+    _time :: Maybe Int
   } deriving (Show)
+
+makeLenses ''Test
 
 instance H.ToMarkup Test where
   toMarkup (Test n (Just r) t) = H.tr ! resultColor r $ do
@@ -53,17 +57,16 @@ parseTests name = mapMaybe parseTest
     parseTest = go ( Test name Nothing Nothing )
     go _ "" = Nothing
     go t cs@(c:s)
-      | isDigit c || c == ' ' || c == '='           = go t s
-      | c == 'P' && "PASSED " `isSubsequenceOf` cs  =  Just $ parseNT (t { testResult = Just Pass }) (drop 6 s)
-      | c == 'F' && "FAILED " `isSubsequenceOf` cs  =  Just $ parseNT (t { testResult = Just Fail }) (drop 6 s)
-      | c == 'T' && "TEST FAILED " `isSubsequenceOf` cs  = Just (t { testResult = Just Fail
-                                                              })
+      | isDigit c || c == ' ' || c == '='                = go t s
+      | c == 'P' && "PASSED "      `isSubsequenceOf` cs  = Just $ parseNT (t & result ?~ Pass ) (drop 6 s)
+      | c == 'F' && "FAILED "      `isSubsequenceOf` cs  = Just $ parseNT (t & result ?~ Fail ) (drop 6 s)
+      | c == 'T' && "TEST FAILED " `isSubsequenceOf` cs  = Just           (t & result ?~ Fail)
       | otherwise = error name
     parseNT t s = t2
         where
           (t1, s1) = parseName t s
           (t2, s2) = parseTime t1 s1
-    parseTime t s = let ms = stripPrefix " in " s in ((t { testTime = fmap (read . takeWhile isDigit) ms }), ms)
+    parseTime t s = let ms = stripPrefix " in " s in (t & time .~ fmap (read . takeWhile isDigit) ms, ms)
     parseName t s = (t, dropWhile (/= ' ') s)
 
 

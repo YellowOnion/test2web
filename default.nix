@@ -1,4 +1,4 @@
-{ mkDerivation, base, blaze-html, directory, filepath, lib
+{ mkDerivation, base, blaze-html, directory, filepath, lens, lib
 , unordered-containers
 }:
 mkDerivation {
@@ -8,7 +8,7 @@ mkDerivation {
   isLibrary = false;
   isExecutable = true;
   executableHaskellDepends = [
-    base blaze-html directory filepath unordered-containers
+    base blaze-html directory filepath lens unordered-containers
   ];
   license = "unknown";
   hydraPlatforms = lib.platforms.none;

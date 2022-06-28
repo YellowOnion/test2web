@@ -34,5 +34,6 @@ executable test2web
                     , directory
                     , filepath
                     , unordered-containers
+                    , lens
     hs-source-dirs:   app
     default-language: Haskell2010
