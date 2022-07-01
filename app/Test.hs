@@ -4,7 +4,7 @@ module Test where
 
 import Control.Lens
 
-data TestResult = Pass | Fail
+data TestResult = Pass | Fail | Unknown
   deriving (Show)
 
 data Test = Test

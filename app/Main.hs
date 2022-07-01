@@ -32,20 +32,21 @@ instance H.ToMarkup Test where
     H.td $ H.a ! A.href (H.toValue n) $ "log"
     H.td $ H.a ! A.href (H.toValue (takeWhile (/='.') n)) $ "full log"
     where
-      resultColor Pass = A.class_ "table-success"
-      resultColor Fail = A.class_ "table-danger"
+      resultColor Pass = A.class_ "table-success"     -- Green
+      resultColor Fail = A.class_ "table-danger"      -- Red
+      resultColor Unknown = A.class_ "table-secondary" -- Grey
 
 parseTests :: String -> [String] -> [Test]
 parseTests name = mapMaybe parseTest
   where
     parseTest = go (Test name Nothing Nothing)
-    go _ "" = Nothing
+    go t "" = Just $ t & result ?~ Unknown
     go t cs@(c : s)
       | isDigit c || c == ' ' || c == '=' = go t s
       | c == 'P' && "PASSED " `isSubsequenceOf` cs = Just $ parseNT (t & result ?~ Pass) (drop 6 s)
       | c == 'F' && "FAILED " `isSubsequenceOf` cs = Just $ parseNT (t & result ?~ Fail) (drop 6 s)
-      | c == 'T' && "TEST FAILED " `isSubsequenceOf` cs = Just (t & result ?~ Fail)
-      | otherwise = error name
+      | c == 'T' && "TEST FAILED " `isSubsequenceOf` cs = Just $ t & result ?~ Fail
+      | otherwise = Just $ t & result ?~ Unknown
     parseNT t s = t2
       where
         (t1, s1) = parseName t s
